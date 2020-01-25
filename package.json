@@ -1,0 +1,14 @@
+{
+  "name": "otm-goal-plugin",
+  "version": "1.0.0",
+  "author": [],
+  "license": "Apache-2.0",
+  "otm": {
+      "apis": [
+          {
+              "module": "app",
+              "urlPrefix": "/orgs/{org}/containers/{name}/goals"
+          }
+      ]
+  }
+}
