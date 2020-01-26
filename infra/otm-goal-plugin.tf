@@ -10,7 +10,7 @@ resource "aws_batch_job_definition" "otm_data_retriever_goal" {
   }
   container_properties = <<CONTAINER_PROPERTIES
 {
-  "command": ["python", "goals.py"],
+  "command": ["python", "otmplugins/otm-goal-plugin/goal.py"],
   "image": "${aws_ecr_repository.otm_data_retriever.repository_url}:latest",
   "jobRoleArn": "${aws_iam_role.ecs_task_role.arn}",
   "memory": 2000,
