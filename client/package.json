@@ -1,0 +1,14 @@
+{
+    "name": "otm-goal-plugin-client",
+    "main": "src/index.js",
+    "dependencies": {
+        "axios": "^0.18.0",
+        "d3": "^4.12.2",
+        "vue": "^2.5.2"
+    },
+    "devDependencies": {
+        "vue-hot-reload-api": "^2.3.4",
+        "vue-style-loader": "^3.0.1",
+        "css-loader": "^0.28.0"
+    }
+}
