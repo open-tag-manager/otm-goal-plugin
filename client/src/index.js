@@ -10,6 +10,9 @@ export default () => {
         name: 'Container-Goals',
         component: ContainerGoals
       })
+    },
+    app (app) {
+      app.$store.dispatch('addContainerMenu', {label: 'Goal', name: 'Container-Goals'})
     }
   }
 }
