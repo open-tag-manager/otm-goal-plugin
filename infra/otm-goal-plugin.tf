@@ -3,10 +3,10 @@ variable "aws_cloudwatch_event_goal_enable" {
 }
 
 resource "aws_batch_job_definition" "otm_data_retriever_goal" {
-  name = "${terraform.env}_otm_data_retriever_goal_job_definition"
+  name = "${terraform.workspace}_otm_data_retriever_goal_job_definition"
   type = "container"
-  timeout = {
-    attempt_duration_seconds = "${var.aws_batch_timeout}"
+  timeout {
+    attempt_duration_seconds = var.aws_batch_timeout
   }
   container_properties = <<CONTAINER_PROPERTIES
 {
@@ -31,7 +31,7 @@ CONTAINER_PROPERTIES
 }
 
 resource "aws_iam_role" "data_retriever_goal_role" {
-  name = "${terraform.env}_otm_data_retriever_goal_role"
+  name = "${terraform.workspace}_otm_data_retriever_goal_role"
   assume_role_policy = <<EOF
 {
   "Version": "2012-10-17",
@@ -50,7 +50,7 @@ EOF
 }
 
 resource "aws_iam_policy" "data_retriever_goal_policy" {
-  name = "${terraform.env}_otm_data_retriever_goal_policy"
+  name = "${terraform.workspace}_otm_data_retriever_goal_policy"
   description = "Open Tag Manager, CloudWatch target role"
   policy = <<EOF
 {
@@ -69,24 +69,24 @@ EOF
 }
 
 resource "aws_iam_role_policy_attachment" "data_retriever_goal_policy_attachment" {
-  role = "${aws_iam_role.data_retriever_goal_role.name}"
-  policy_arn = "${aws_iam_policy.data_retriever_goal_policy.arn}"
+  role = aws_iam_role.data_retriever_goal_role.name
+  policy_arn = aws_iam_policy.data_retriever_goal_policy.arn
 }
 
 resource "aws_cloudwatch_event_rule" "otm_data_retriever_goal" {
-  name                = "${terraform.env}_otm_data_retriever_goal"
+  name                = "${terraform.workspace}_otm_data_retriever_goal"
   description         = "[OTM] retrieve goal result"
   schedule_expression = "cron(10 0 * * ? *)"
-  is_enabled          = "${var.aws_cloudwatch_event_goal_enable}"
+  is_enabled          = var.aws_cloudwatch_event_goal_enable
 }
 
 resource "aws_cloudwatch_event_target" "otm_data_retriever_goal" {
-  rule         = "${aws_cloudwatch_event_rule.otm_data_retriever_goal.name}"
-  target_id    = "${terraform.env}_otm_data_retriever_goal"
-  arn          = "${var.aws_batch_job_queue_arn}"
-  role_arn     = "${aws_iam_role.data_retriever_goal_role.arn}"
-  batch_target = {
-    job_definition = "${aws_batch_job_definition.otm_data_retriever_goal.arn}"
-    job_name       = "${terraform.env}_otm_data_retriever_goal"
+  rule         = aws_cloudwatch_event_rule.otm_data_retriever_goal.name
+  target_id    = "${terraform.workspace}_otm_data_retriever_goal"
+  arn          = var.aws_batch_job_queue_arn
+  role_arn     = aws_iam_role.data_retriever_goal_role.arn
+  batch_target {
+    job_definition = aws_batch_job_definition.otm_data_retriever_goal.arn
+    job_name       = "${terraform.workspace}_otm_data_retriever_goal"
   }
 }

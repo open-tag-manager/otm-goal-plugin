@@ -117,10 +117,6 @@ def delete_container_goals(org, name, goal):
     if data is None:
         return Response(body={'error': 'not found'}, status_code=404)
 
-    o_prefix = ''
-    if org != 'root':
-        o_prefix = org + '/'
-
     bucket = os.environ.get('OTM_STATS_BUCKET')
     file = (os.environ.get('OTM_STATS_PREFIX') or '') + 'goals.json'
     object = s3.Object(bucket, file)
