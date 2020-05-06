@@ -5,12 +5,17 @@ import json
 import os
 import re
 import pandas as pd
+from datetime import datetime as dt
 
 
 class GoalDataRetriever(RetrieverBase):
     def __init__(self, **kwargs):
         super(GoalDataRetriever, self).__init__(**kwargs)
-        self.today = datetime.today()
+        print(self.options)
+        if self.options['date']:
+            self.today = dt.strptime(self.options['date'], '%Y-%m-%d')
+        else:
+            self.today = datetime.today()
         self.yesterday = self.today - timedelta(days=1)
 
     def execute(self):
@@ -100,7 +105,8 @@ def main():
         athena_result_bucket=os.environ.get('STATS_ATHENA_RESULT_BUCKET'),
         athena_result_prefix=os.environ.get('STATS_ATHENA_RESULT_PREFIX') or '',
         athena_database=os.environ.get('STATS_ATHENA_DATABASE'),
-        athena_table=os.environ.get('STATS_ATHENA_TABLE')
+        athena_table=os.environ.get('STATS_ATHENA_TABLE'),
+        date=os.environ.get('DATE')
     )
     retriever.execute()
 
