@@ -27,13 +27,26 @@ class GoalDataRetriever(RetrieverBase):
         q += ' AND month = {0}'.format(self.yesterday.month)
         q += ' AND day = {0}'.format(self.yesterday.day)
 
-        # support eq mode only
-        q += " AND JSON_EXTRACT_SCALAR(qs, '$.o_s') = '{0}'".format(re.sub(r'\'', '\'\'', g['target']))
+        if g['target_match'] == 'prefix':
+            q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.o_s'), '^{0}')".format(
+                re.sub(r'\'', '\'\'', re.escape(g['target'])))
+        elif g['target_match'] == 'regex':
+            q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.o_s'), '{0}')".format(re.sub(r'\'', '\'\'', g['target']))
+        else:
+            # eq
+            q += " AND JSON_EXTRACT_SCALAR(qs, '$.o_s') = '{0}'".format(re.sub(r'\'', '\'\'', g['target']))
 
         if g['path']:
-            # support eq mode only
-            q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}$')".format(
-                re.sub(r'\'', '\'\'', g['path']))
+            if g['path_match'] == 'prefix':
+                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}')".format(
+                    re.sub(r'\'', '\'\'', re.escape(g['path'])))
+            elif g['target_match'] == 'regex':
+                q += " AND regexp_like(regexp_replace(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+', ''), '{0}')".format(
+                    re.sub(r'\'', '\'\'', g['path']))
+            else:
+                # eq
+                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}$')".format(
+                    re.sub(r'\'', '\'\'', re.escape(g['path'])))
 
         sql = """SELECT 
 COUNT(qs) as e_count,
