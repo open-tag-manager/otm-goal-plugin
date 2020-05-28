@@ -19,6 +19,7 @@ class GoalDataRetriever(RetrieverBase):
         self.yesterday = self.today - timedelta(days=1)
 
     def execute(self):
+        self.make_partition()
         goal_obj = self.s3.Object(self.options['stat_bucket'],
                                   self.options['stat_prefix'] + self.options['goal_object'])
         goal_data = json.loads(goal_obj.get()['Body'].read())
