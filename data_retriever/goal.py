@@ -28,7 +28,8 @@ class GoalDataRetriever(RetrieverBase):
 
     def execute_result_yesterday(self, g):
         q = ''
-        q += "tid = '{0}'".format(g['container'])
+        q += "org = '{0}'".format(g['org'])
+        q += " AND tid = '{0}'".format(g['container'])
         q += ' AND year = {0}'.format(self.yesterday.strftime('%Y'))
         q += ' AND month = {0}'.format(self.yesterday.month)
         q += ' AND day = {0}'.format(self.yesterday.day)
@@ -66,6 +67,8 @@ WHERE {2}
             print(json.dumps({'message': 'error', 'result': result}))
             return False
 
+        self._save_usage_report(self.options['stat_bucket'], g['org'], g['container'], result)
+
         result_data = self.s3.Bucket(self.options['athena_result_bucket']).Object(
             '%s%s.csv' % (
                 self.options['athena_result_prefix'], result['QueryExecution']['QueryExecutionId'])).get()
@@ -102,6 +105,7 @@ def main():
     retriever = GoalDataRetriever(
         stat_bucket=os.environ.get('OTM_STATS_BUCKET'),
         stat_prefix=os.environ.get('OTM_STATS_PREFIX'),
+        usage_prefix=os.environ.get('OTM_USAGE_PREFIX'),
         goal_object='goals.json',
         athena_result_bucket=os.environ.get('STATS_ATHENA_RESULT_BUCKET'),
         athena_result_prefix=os.environ.get('STATS_ATHENA_RESULT_PREFIX') or '',
