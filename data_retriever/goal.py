@@ -5,7 +5,6 @@ import json
 import os
 import re
 import pandas as pd
-from datetime import datetime as dt
 
 
 class GoalDataRetriever(RetrieverBase):
@@ -13,7 +12,7 @@ class GoalDataRetriever(RetrieverBase):
         super(GoalDataRetriever, self).__init__(**kwargs)
         print(self.options)
         if self.options['date']:
-            self.today = dt.strptime(self.options['date'], '%Y-%m-%d')
+            self.today = datetime.strptime(self.options['date'], '%Y-%m-%d')
         else:
             self.today = datetime.today()
         self.yesterday = self.today - timedelta(days=1)
@@ -22,7 +21,13 @@ class GoalDataRetriever(RetrieverBase):
         self.make_partition()
         goal_obj = self.s3.Object(self.options['stat_bucket'],
                                   self.options['stat_prefix'] + self.options['goal_object'])
-        goal_data = json.loads(goal_obj.get()['Body'].read())
+
+        try:
+            goal_data = json.loads(goal_obj.get()['Body'].read())
+        except ClientError:
+            print('goal data is not found')
+            return
+
         for g in goal_data:
             self.execute_result_yesterday(g)
 
