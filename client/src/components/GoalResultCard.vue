@@ -130,7 +130,7 @@
       async deleteGoal(goal) {
         const name = this.$route.params.name
         await this.$Amplify.API.del('OTMClientAPI', `/orgs/${this.$route.params.org}/containers/${name}/goals/${goal.id}`)
-        await this.reloadGoals()
+        this.$emit('delete', goal)
       }
     }
   }

@@ -42,7 +42,7 @@
     <h3>Goals</h3>
     <div class="row">
       <div v-for="goal in goals" :key="goal.id" class="col-6">
-        <goal-result-card :goal="goal"></goal-result-card>
+        <goal-result-card :goal="goal" @delete="reloadGoals" />
       </div>
     </div>
   </div>

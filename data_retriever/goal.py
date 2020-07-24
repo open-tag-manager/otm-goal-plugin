@@ -4,6 +4,7 @@ from botocore.errorfactory import ClientError
 import json
 import os
 import re
+import boto3
 import pandas as pd
 
 
@@ -19,22 +20,28 @@ class GoalDataRetriever(RetrieverBase):
 
     def execute(self):
         self.make_partition()
-        goal_obj = self.s3.Object(self.options['stat_bucket'],
-                                  self.options['stat_prefix'] + self.options['goal_object'])
+        self.scan_table()
 
-        try:
-            goal_data = json.loads(goal_obj.get()['Body'].read())
-        except ClientError:
-            print('goal data is not found')
-            return
+    def scan_table(self, last_evaluated_key=None):
+        args = {
+            'FilterExpression': 'attribute_exists(goals)'
+        }
+        if last_evaluated_key:
+            args['ExclusiveStartKey'] = last_evaluated_key
 
-        for g in goal_data:
-            self.execute_result_yesterday(g)
+        dynamodb = boto3.resource('dynamodb')
+        table = dynamodb.Table(str(self.options['container_table']))
+        items = table.scan(**args)
+        for item in items['Items']:
+            for g in item['goals']:
+                self.execute_result_yesterday(item['organization'], item['tid'], g)
+        if 'LastEvaluatedKey' in items:
+            self.scan_table(items['LastEvaluatedKey'])
 
-    def execute_result_yesterday(self, g):
+    def execute_result_yesterday(self, org, tid, g):
         q = ''
-        q += "org = '{0}'".format(g['org'])
-        q += " AND tid = '{0}'".format(g['container'])
+        q += "org = '{0}'".format(org)
+        q += " AND tid = '{0}'".format(tid)
         q += ' AND year = {0}'.format(self.yesterday.strftime('%Y'))
         q += ' AND month = {0}'.format(self.yesterday.month)
         q += ' AND day = {0}'.format(self.yesterday.day)
@@ -72,7 +79,7 @@ WHERE {2}
             print(json.dumps({'message': 'error', 'result': result}))
             return False
 
-        self._save_usage_report(self.options['stat_bucket'], g['org'], g['container'], result)
+        self._save_usage_report(self.options['stat_bucket'], org, tid, result)
 
         result_data = self.s3.Bucket(self.options['athena_result_bucket']).Object(
             '%s%s.csv' % (
@@ -83,10 +90,10 @@ WHERE {2}
         r_data = {'date': self.yesterday.strftime('%Y-%m-%d'), 'e_count': e_count, 'u_count': u_count}
 
         grp_prefix = ''
-        if not g['org'] == 'root':
-            grp_prefix = g['org'] + '/'
+        if not org == 'root':
+            grp_prefix = org + '/'
 
-        result_file = self.options['stat_prefix'] + grp_prefix + g['container'] + '_' + g['id'] + '_goal_result.json'
+        result_file = self.options['stat_prefix'] + grp_prefix + tid + '_' + g['id'] + '_goal_result.json'
         goal_result_obj = self.s3.Object(self.options['stat_bucket'], result_file)
         try:
             response = goal_result_obj.get()
@@ -111,11 +118,11 @@ def main():
         stat_bucket=os.environ.get('OTM_STATS_BUCKET'),
         stat_prefix=os.environ.get('OTM_STATS_PREFIX'),
         usage_prefix=os.environ.get('OTM_USAGE_PREFIX'),
-        goal_object='goals.json',
         athena_result_bucket=os.environ.get('STATS_ATHENA_RESULT_BUCKET'),
         athena_result_prefix=os.environ.get('STATS_ATHENA_RESULT_PREFIX') or '',
         athena_database=os.environ.get('STATS_ATHENA_DATABASE'),
         athena_table=os.environ.get('STATS_ATHENA_TABLE'),
+        container_table=os.environ.get('OTM_CONTAINER_DYNAMODB_TABLE'),
         date=os.environ.get('DATE')
     )
     retriever.execute()
