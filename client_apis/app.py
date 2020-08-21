@@ -1,5 +1,5 @@
 from chalice import Blueprint, Response
-from chalicelib import app, authorizer, s3_client
+from chalicelib import app, authorizer, s3_client, batch_client
 from chalicelib.decorator import check_org_permission, check_json_body
 from chalicelib.dynamodb import get_container_table
 import os
@@ -102,5 +102,41 @@ def delete_container_goals(org, name, goal):
         container_info['Item']['goals'].remove(c[0])
         get_container_table().put_item(Item=container_info['Item'])
         return Response(body='', status_code=204)
+    else:
+        return Response(body={'error': 'not found'}, status_code=404)
+
+
+@plugin_app.route('/{goal}/update_requests', methods=['POST'], cors=True, authorizer=authorizer)
+@check_org_permission('write')
+@check_json_body({
+    'startdate': {'type': 'string', 'required': True, 'empty': False},
+    'enddate': {'type': 'string', 'required': True, 'empty': False}
+})
+def update_goal_request(org, name, goal):
+    request = app.current_request
+    body = request.json_body
+
+    container_info = get_container_table().get_item(Key={'tid': name})
+    if 'Item' not in container_info:
+        return Response(body={'error': 'not found'}, status_code=404)
+    if not container_info['Item']['organization'] == org:
+        return Response(body={'error': 'not found'}, status_code=404)
+    if 'goals' not in container_info['Item']:
+        return Response(body={'error': 'not found'}, status_code=404)
+
+    c = list(filter(lambda x: x['id'] == goal, container_info['Item']['goals']))
+    if len(c) > 0:
+        job = batch_client.submit_job(
+            jobName=('otm_data_retriever_' + name + '_goal_term_' + str(uuid.uuid4())),
+            jobQueue=os.environ.get('STATS_BATCH_JOB_QUEUE'),
+            jobDefinition=os.environ.get('STATS_BATCH_JOB_DEFINITION'),
+            containerOverrides={'command': ['python', 'otmplugins/otm-goal-plugin/goal_term.py'], 'environment': [
+                {'name': 'TID', 'value': name},
+                {'name': 'GOAL_ID', 'value': goal},
+                {'name': 'STARTDATE', 'value': body['startdate']},
+                {'name': 'ENDDATE', 'value': body['enddate']}
+            ]}
+        )
+        return Response(body={'queue': job['jobId']}, status_code=201)
     else:
         return Response(body={'error': 'not found'}, status_code=404)
