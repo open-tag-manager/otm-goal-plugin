@@ -8,16 +8,36 @@
         <div>Target status: <code>{{goal.target}}</code> (<code>{{goal.target_match}}</code>)</div>
         <div v-if="goal.path">Target path: <code>{{goal.path}}</code> (<code>{{goal.path_match}}</code>)</div>
       </div>
+      <button class="btn btn-primary btn-sm" @click="showUpdateRequestModal">Recounting old data</button>
       <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)">Delete</button>
     </div>
+    <b-modal ref="UpdateRequestModal" title="Recounting old data" @ok="updateRequest">
+      <b-form-group label="Start date">
+        <flat-pickr v-model="stime" class="form-control" id="goalstime"
+                    :config="{dateFormat: 'Y-m-d'}"></flat-pickr>
+      </b-form-group>
+      <b-form-group label="End date">
+        <flat-pickr v-model="etime" class="form-control" id="goaletime"
+                    :config="{dateFormat: 'Y-m-d'}"></flat-pickr>
+      </b-form-group>
+    </b-modal>
   </div>
 </template>
 
 <script>
   import axios from 'axios'
   import * as d3 from 'd3'
+  import flatPickr from 'vue-flatpickr-component'
+  import moment from 'moment'
 
   export default {
+    components: {flatPickr},
+    data () {
+      return {
+        stime: moment().subtract(30, 'days').toDate(),
+        etime: moment().subtract(1, 'days').toDate()
+      }
+    },
     props: {
       goal: {
         type: Object,
@@ -127,10 +147,22 @@
       }
     },
     methods: {
-      async deleteGoal(goal) {
+      async deleteGoal() {
         const name = this.$route.params.name
-        await this.$Amplify.API.del('OTMClientAPI', `/orgs/${this.$route.params.org}/containers/${name}/goals/${goal.id}`)
-        this.$emit('delete', goal)
+        await this.$Amplify.API.del('OTMClientAPI', `/orgs/${this.$route.params.org}/containers/${name}/goals/${this.goal.id}`)
+        this.$emit('delete', this.goal)
+      },
+      showUpdateRequestModal () {
+        this.$refs.UpdateRequestModal.show()
+      },
+      async updateRequest () {
+        const name = this.$route.params.name
+        await this.$Amplify.API.post('OTMClientAPI', `/orgs/${this.$route.params.org}/containers/${name}/goals/${this.goal.id}/update_requests`, {
+          body: {
+            startdate: moment(this.stime).format('YYYYMMDD'),
+            enddate: moment(this.etime).format('YYYYMMDD')
+          }
+        })
       }
     }
   }
