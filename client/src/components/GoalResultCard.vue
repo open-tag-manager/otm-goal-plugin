@@ -163,6 +163,7 @@
             enddate: moment(this.etime).format('YYYYMMDD')
           }
         })
+        this.$toasted.show('Requested!', {duration: 3000})
       }
     }
   }
