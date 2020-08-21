@@ -33,7 +33,7 @@ class GoalTermDataRetriever(RetrieverBase):
     def execute_query(self, org, tid, g):
         q = ''
         q += "org = '{0}'".format(org)
-        # q += " AND tid = '{0}'".format(tid)
+        q += " AND tid = '{0}'".format(tid)
         q += ' AND  year * 10000 + month * 100 + day >= {0}'.format(self.options['startdate'])
         q += ' AND  year * 10000 + month * 100 + day <= {0}'.format(self.options['enddate'])
 
