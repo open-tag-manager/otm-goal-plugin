@@ -1,8 +1,8 @@
 from chalice import Blueprint, Response
-from botocore.errorfactory import ClientError
-from chalicelib import app, authorizer, s3, s3_client, check_org_permission, get_container_table, check_json_body
+from chalicelib import app, authorizer, s3_client
+from chalicelib.decorator import check_org_permission, check_json_body
+from chalicelib.dynamodb import get_container_table
 import os
-import json
 import uuid
 
 plugin_app = Blueprint(__name__)
