@@ -13,6 +13,8 @@ export default () => {
     },
     app (app) {
       app.$store.dispatch('addContainerMenu', {label: 'Goal', name: 'Container-Goals'})
+      app.$store.dispatch('addTableAction', {label: 'Set goal', name: 'Container-Goals'})
+      app.$store.dispatch('addEventTableAction', {label: 'Set goal', name: 'Container-Goals'})
     }
   }
 }

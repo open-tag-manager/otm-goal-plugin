@@ -49,14 +49,21 @@
 </template>
 
 <script>
+  import urlparser from 'url'
   import GoalResultCard from '../components/GoalResultCard'
 
-  const goalDefault = () => {
+  const goalDefault = (url = null, target = null) => {
+    let path = null
+    if (url) {
+      path = urlparser.parse(url).path
+    }
+
+
     return {
       name: null,
-      target: null,
+      target: target,
       target_match: 'eq',
-      path: null,
+      path: path,
       path_match: 'eq'
     }
   }
@@ -64,7 +71,7 @@
     components: {GoalResultCard},
     data() {
       return {
-        newGoal: goalDefault(),
+        newGoal: goalDefault(this.$route.query.url, this.$route.query.target),
         goals: []
       }
     },
