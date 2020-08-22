@@ -76,7 +76,7 @@ WHERE {2}
 
         result = self._execute_athena_query(sql)
         if result['QueryExecution']['Status']['State'] != 'SUCCEEDED':
-            print(json.dumps({'message': 'error', 'result': result}))
+            print(result)
             return False
 
         self._save_usage_report(self.options['stat_bucket'], org, tid, result)

@@ -69,7 +69,7 @@ GROUP BY year * 10000 + month * 100 + day
 
         athena_result = self._execute_athena_query(sql)
         if athena_result['QueryExecution']['Status']['State'] != 'SUCCEEDED':
-            print(json.dumps({'message': 'error', 'result': athena_result}))
+            print(athena_result)
             return False
 
         self._save_usage_report(self.options['stat_bucket'], org, tid, athena_result)
