@@ -46,7 +46,7 @@ class GoalTermDataRetriever(RetrieverBase):
             # eq
             q += " AND JSON_EXTRACT_SCALAR(qs, '$.o_s') = '{0}'".format(re.sub(r'\'', '\'\'', g['target']))
 
-        if g['path']:
+        if 'path' in g and g['path']:
             if g['path_match'] == 'prefix':
                 q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}')".format(
                     re.sub(r'\'', '\'\'', re.escape(g['path'])))
@@ -57,6 +57,17 @@ class GoalTermDataRetriever(RetrieverBase):
                 # eq
                 q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}$')".format(
                     re.sub(r'\'', '\'\'', re.escape(g['path'])))
+
+        if 'label' in g and g['label']:
+            if g['label_match'] == 'prefix':
+                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.el'), '^{0}')".format(
+                    re.sub(r'\'', '\'\'', re.escape(g['label'])))
+            elif g['target_match'] == 'regex':
+                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.el'), '{0}')".format(
+                    re.sub(r'\'', '\'\'', g['label']))
+            else:
+                # eq
+                q += " AND JSON_EXTRACT_SCALAR(qs, '$.el') = '{0}'".format(re.sub(r'\'', '\'\'', g['label']))
 
         sql = """SELECT 
 year * 10000 + month * 100 + day as date,
@@ -86,7 +97,8 @@ GROUP BY year * 10000 + month * 100 + day
         except ClientError:
             result = []
 
-        result_data = self.s3.Bucket(self.options['athena_result_bucket']).Object('%s%s.csv' % (self.options['athena_result_prefix'], athena_result['QueryExecution']['QueryExecutionId'])).get()
+        result_data = self.s3.Bucket(self.options['athena_result_bucket']).Object('%s%s.csv' % (
+        self.options['athena_result_prefix'], athena_result['QueryExecution']['QueryExecutionId'])).get()
         pd_data = pd.read_csv(result_data['Body'], encoding='utf-8')
         for index, row in pd_data.iterrows():
             e_count = int(row['e_count'])

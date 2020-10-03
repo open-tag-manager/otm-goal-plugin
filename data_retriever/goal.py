@@ -55,7 +55,7 @@ class GoalDataRetriever(RetrieverBase):
             # eq
             q += " AND JSON_EXTRACT_SCALAR(qs, '$.o_s') = '{0}'".format(re.sub(r'\'', '\'\'', g['target']))
 
-        if g['path']:
+        if 'path' in g and g['path']:
             if g['path_match'] == 'prefix':
                 q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}')".format(
                     re.sub(r'\'', '\'\'', re.escape(g['path'])))
@@ -66,6 +66,17 @@ class GoalDataRetriever(RetrieverBase):
                 # eq
                 q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}$')".format(
                     re.sub(r'\'', '\'\'', re.escape(g['path'])))
+
+        if 'label' in g and g['label']:
+            if g['label_match'] == 'prefix':
+                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.el'), '^{0}')".format(
+                    re.sub(r'\'', '\'\'', re.escape(g['label'])))
+            elif g['target_match'] == 'regex':
+                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.el'), '{0}')".format(
+                    re.sub(r'\'', '\'\'', g['label']))
+            else:
+                # eq
+                q += " AND JSON_EXTRACT_SCALAR(qs, '$.el') = '{0}'".format(re.sub(r'\'', '\'\'', g['label']))
 
         sql = """SELECT 
 COUNT(qs) as e_count,

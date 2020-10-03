@@ -36,13 +36,27 @@
         </b-form-select>
       </div>
 
+      <div class="form-group">
+        <label for="goal-label">Label</label>
+        <input id="goal-label" type="text" class="form-control" v-model="newGoal.label">
+      </div>
+
+      <div class="form-group">
+        <label for="goal-label-criteria">Label criteria</label>
+        <b-form-select id="goal-label-criteria" v-model="newGoal.label_match">
+          <option value="eq">Equal</option>
+          <option value="prefix">Prefix match</option>
+          <option value="regex">Regular expression match</option>
+        </b-form-select>
+      </div>
+
       <button type="submit" class="btn btn-primary">Create</button>
     </form>
 
     <h3>Goals</h3>
     <div class="row">
       <div v-for="goal in goals" :key="goal.id" class="col-6">
-        <goal-result-card :goal="goal" @delete="reloadGoals" />
+        <goal-result-card :goal="goal" @delete="reloadGoals"/>
       </div>
     </div>
   </div>
@@ -52,7 +66,7 @@
   import urlparser from 'url'
   import GoalResultCard from '../components/GoalResultCard'
 
-  const goalDefault = (url = null, target = null) => {
+  const goalDefault = (url = null, target = null, label = null) => {
     let path = null
     if (url) {
       path = urlparser.parse(url).path
@@ -64,14 +78,16 @@
       target: target,
       target_match: 'eq',
       path: path,
-      path_match: 'eq'
+      path_match: 'eq',
+      label: label,
+      label_match: 'eq'
     }
   }
   export default {
     components: {GoalResultCard},
     data() {
       return {
-        newGoal: goalDefault(this.$route.query.url, this.$route.query.target),
+        newGoal: goalDefault(this.$route.query.url, this.$route.query.target, this.$route.query.label),
         goals: []
       }
     },

@@ -7,6 +7,7 @@
         <div>Name: {{goal.name}}</div>
         <div>Target status: <code>{{goal.target}}</code> (<code>{{goal.target_match}}</code>)</div>
         <div v-if="goal.path">Target path: <code>{{goal.path}}</code> (<code>{{goal.path_match}}</code>)</div>
+        <div v-if="goal.label">Target label: <code>{{goal.label}}</code> (<code>{{goal.label_match}}</code>)</div>
       </div>
       <button class="btn btn-primary btn-sm" @click="showUpdateRequestModal">Recounting old data</button>
       <button class="btn btn-danger btn-sm" @click="deleteGoal(goal)">Delete</button>

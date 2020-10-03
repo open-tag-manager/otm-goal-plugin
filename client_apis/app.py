@@ -45,7 +45,9 @@ def get_container_goals(org, name):
     'target': {'type': 'string', 'required': True, 'empty': False},
     'target_match': {'type': 'string', 'required': False},
     'path': {'type': 'string', 'required': False, 'nullable': True},
-    'path_match': {'type': 'string', 'required': False}
+    'path_match': {'type': 'string', 'required': False},
+    'label': {'type': 'string', 'required': False, 'nullable': True},
+    'label_match': {'type': 'string', 'required': False}
 })
 def create_container_goals(org, name):
     container_info = get_container_table().get_item(Key={'tid': name})
@@ -69,13 +71,23 @@ def create_container_goals(org, name):
     if 'path_match' in body:
         path_match = body['path_match']
 
+    label = None
+    if 'label' in body:
+        label = body['label']
+
+    label_match = 'eq'
+    if 'label_match' in body:
+        label_match = body['label_match']
+
     goal = {
         'id': str(uuid.uuid4()),
         'name': body['name'],
         'target': body['target'],
         'target_match': target_match,
         'path': path,
-        'path_match': path_match
+        'path_match': path_match,
+        'label': label,
+        'label_match': label_match
     }
 
     if 'goals' not in container_info['Item']:
