@@ -57,14 +57,14 @@ class GoalDataRetriever(RetrieverBase):
 
         if 'path' in g and g['path']:
             if g['path_match'] == 'prefix':
-                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}')".format(
+                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^https?://[^/]+{0}')".format(
                     re.sub(r'\'', '\'\'', re.escape(g['path'])))
             elif g['target_match'] == 'regex':
-                q += " AND regexp_like(regexp_replace(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+', ''), '{0}')".format(
+                q += " AND regexp_like(regexp_replace(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^https?://[^/]+', ''), '{0}')".format(
                     re.sub(r'\'', '\'\'', g['path']))
             else:
                 # eq
-                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^http?://[^/]+{0}$')".format(
+                q += " AND regexp_like(JSON_EXTRACT_SCALAR(qs, '$.dl'), '^https?://[^/]+{0}$')".format(
                     re.sub(r'\'', '\'\'', re.escape(g['path'])))
 
         if 'label' in g and g['label']:
