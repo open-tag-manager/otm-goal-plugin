@@ -55,12 +55,19 @@
       svg.attr('width', width).attr('height', height)
       const d = await axios.get(this.goal.result_url)
       const data = d.data
+      if (data.length === 0) {
+        return
+      }
+
+      const formatTime = d3.timeFormat('%Y-%m-%d')
+      const dateRange = d3.extent(data, d => new Date(d.date))
+      const newData = d3.timeDays(moment(dateRange[0]).subtract(1, 'day'), dateRange[1]).map((d) => {
+        const date = formatTime(d)
+        return data.find(od => od.date === date) || {date, e_count: 0, u_count: 0}
+      })
+
       const xScale = d3.scaleTime()
-        .domain([d3.min(data.map((d) => {
-          return new Date(d.date)
-        })), d3.max(data.map((d) => {
-          return new Date(d.date)
-        }))])
+        .domain(dateRange)
         .range([margin.left, width - margin.right])
       const yScale = d3.scaleLinear()
         .domain([0, d3.max(data.map((d) => {
@@ -100,18 +107,18 @@
         })
         .on('mousemove', function () {
           let d = null
-          if (data.length > 1) {
+          if (newData.length > 1) {
             const x0 = xScale.invert(d3.mouse(this)[0])
-            const i = bisect(data, x0, 1)
-            if (i < data.length) {
-              const d0 = data[i - 1]
-              const d1 = data[i]
+            const i = bisect(newData, x0, 1)
+            if (i < newData.length) {
+              const d0 = newData[i - 1]
+              const d1 = newData[i]
               d = x0 - new Date(d0.date) > new Date(d1.date) - x0 ? d1 : d0
             } else {
-              d = data[data.length - 1]
+              d = newData[newData.length - 1]
             }
-          } else if (data.length === 1) {
-            d = data[0]
+          } else if (newData.length === 1) {
+            d = newData[0]
           }
 
           if (d) {
@@ -122,7 +129,7 @@
               .style('top', yScale(d.e_count) - 20 + 'px')
           }
         })
-      svg.append('path').datum(data)
+      svg.append('path').datum(newData)
         .attr('fill', 'none')
         .attr('stroke', 'steelblue')
         .attr('stroke-width', 1.5)
@@ -143,8 +150,8 @@
       .attr('class', 'y-axis')
         .attr('transform', `translate(${[margin.left, 0].join(',')})`)
         .call(d3.axisLeft(yScale))
-      if (data.length > 0) {
-        svg.append('text').text(data[data.length - 1].e_count)
+      if (newData.length > 0) {
+        svg.append('text').text(newData[newData.length - 1].e_count)
       }
     },
     methods: {
