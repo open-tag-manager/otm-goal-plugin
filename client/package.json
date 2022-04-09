@@ -6,7 +6,7 @@
         "d3": "^4.12.2",
         "vue": "^2.5.2",
         "vue-flatpickr-component": "^8.1.5",
-        "moment": "^2.23.0"
+        "moment": "^2.29.2"
     },
     "devDependencies": {
         "css-loader": "^0.28.0",
